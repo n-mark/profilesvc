@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 )
 
@@ -12,6 +13,15 @@ type Config struct {
 	DBUser     string
 	DBPassword string
 	ServerAddr string
+	BrokerType string
+}
+
+type RabbitConfig struct {
+	DSN                                 string
+	ProfileProduceExchange              string
+	BillingConsumeExchange              string
+	ProfileSvcConsumerForBillingAccount string
+	BillingExchangeToConsumerRoutingKey string
 }
 
 func Load() Config {
@@ -22,6 +32,7 @@ func Load() Config {
 		DBUser:     getEnv("DB_USER", "social_user"),
 		DBPassword: getEnv("DB_PASSWORD", "social_pass"),
 		ServerAddr: getEnv("SERVER_ADDR", ":8080"),
+		BrokerType: getEnv("BROKER_TYPE", "RABBITMQ"),
 	}
 }
 
@@ -37,4 +48,25 @@ func getEnv(key, fallback string) string {
 		return val
 	}
 	return fallback
+}
+
+func GetRabbitConfig() RabbitConfig {
+	user := os.Getenv("RABBIT_USERNAME")
+	password := os.Getenv("RABBIT_PASSWORD")
+	host := os.Getenv("RABBIT_HOST")
+	port := os.Getenv("RABBIT_PORT")
+	billingExchange := getEnv("RABBIT_BILLING_CONSUME_EXCHANGE", "billing")
+	profileExchange := getEnv("RABBIT_PROFILE_PRODUCE_EXCHANGE", "profile")
+	consumer := getEnv("RABBIT_PROFILESVC_BILLING_CONSUMER", "profilesvc.consumer.for.billing.account")
+	rk := getEnv("RABBIT_PROFILESVC_BILLING_RK", "billing.account.created")
+
+	u := url.URL{Scheme: "amqp",
+		User: url.UserPassword(user, password),
+		Host: fmt.Sprintf("%s:%s", host, port)}
+
+	return RabbitConfig{DSN: u.String(),
+		ProfileProduceExchange:              profileExchange,
+		BillingConsumeExchange:              billingExchange,
+		ProfileSvcConsumerForBillingAccount: consumer,
+		BillingExchangeToConsumerRoutingKey: rk}
 }
