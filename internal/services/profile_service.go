@@ -4,23 +4,27 @@ import (
 	"context"
 
 	"profile-svc/internal/models"
+
+	"github.com/google/uuid"
 )
 
 type ProfileService struct {
 	store ProfileStoreInterface
+	rw    ResponseWriter
 }
 
 type ProfileStoreInterface interface {
 	Create(ctx context.Context, profile models.Profile) (models.Profile, error)
 	Update(ctx context.Context, profile models.Profile) (models.Profile, error)
+	UpdateStatus(ctx context.Context, ownerId int64, status string) (bool, error)
 	GetByID(ctx context.Context, id int64) (models.Profile, error)
 	GetByOwnerID(ctx context.Context, ownerID int64) (models.Profile, error)
 	Upsert(ctx context.Context, profile models.Profile) (models.Profile, error)
 	List(ctx context.Context, query models.QueryDTO) ([]models.Profile, error)
 }
 
-func NewProfileService(store ProfileStoreInterface) *ProfileService {
-	return &ProfileService{store: store}
+func NewProfileService(store ProfileStoreInterface, rw ResponseWriter) *ProfileService {
+	return &ProfileService{store: store, rw: rw}
 }
 
 func (s *ProfileService) GetOne(ctx context.Context, id int64) (models.GetProfileDTO, error) {
@@ -90,6 +94,14 @@ func (s *ProfileService) Create(ctx context.Context, ownerID int64, dto models.P
 		return models.GetProfileDTO{}, err
 	}
 
+	report := models.ProfileCreatedEvent{
+		EventId:   uuid.New(),
+		EventType: "PROFILE_CREATED",
+		UserId:    ownerID,
+	}
+
+	s.rw.ReportProfileCreated(report)
+
 	return mapProfile(created), nil
 }
 
@@ -112,6 +124,14 @@ func (s *ProfileService) Update(ctx context.Context, ownerID int64, profileID in
 	}
 
 	return mapProfile(updated), nil
+}
+
+func (s *ProfileService) UpdateStatus(ctx context.Context, ownerID int64, status string) (bool, error) {
+	updated, err := s.store.UpdateStatus(ctx, ownerID, status)
+	if err != nil {
+		return false, err
+	}
+	return updated, nil
 }
 
 func mapProfile(profile models.Profile) models.GetProfileDTO {

@@ -8,6 +8,7 @@ CREATE TABLE profile (
     city varchar(255),
     bio text,
     interests text,
+    status varchar(255),
     CONSTRAINT uq_user
         UNIQUE (userid)
 );

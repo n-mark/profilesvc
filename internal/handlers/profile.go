@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -16,6 +18,22 @@ type ProfileHandler struct {
 
 func NewProfileHandler(service ProfileService) *ProfileHandler {
 	return &ProfileHandler{service: service}
+}
+
+func (h *ProfileHandler) HandleBillingSvcResponse(body []byte) (bool, error) {
+	payload := models.BillingResponse{}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		slog.Error("failed to unmarshal", "error", err)
+		return false, err
+	}
+
+	_, err := h.service.UpdateStatus(context.Background(), payload.UserId, "CREATED")
+	if err != nil {
+		slog.Error("failed to update user profile status", "error", err)
+		return false, err
+	}
+
+	return true, nil
 }
 
 // HandleProfile dispatches GET/PUT /profile based on the authenticated user (X-User-Id).
@@ -40,13 +58,25 @@ func (h *ProfileHandler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusOK, profile)
-	case http.MethodPut, http.MethodPost:
+	case http.MethodPut:
 		var dto models.ProfileDTO
 		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 			http.Error(w, "invalid json", http.StatusBadRequest)
 			return
 		}
 		profile, err := h.service.UpsertByOwner(r.Context(), ownerID, dto)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, http.StatusOK, profile)
+	case http.MethodPost:
+		var dto models.ProfileDTO
+		if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
+		profile, err := h.service.Create(r.Context(), ownerID, dto)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -22,6 +22,7 @@ type RabbitConfig struct {
 	BillingConsumeExchange              string
 	ProfileSvcConsumerForBillingAccount string
 	BillingExchangeToConsumerRoutingKey string
+	ProfileCreatedRoutingKey            string
 }
 
 func Load() Config {
@@ -59,6 +60,7 @@ func GetRabbitConfig() RabbitConfig {
 	profileExchange := getEnv("RABBIT_PROFILE_PRODUCE_EXCHANGE", "profile")
 	consumer := getEnv("RABBIT_PROFILESVC_BILLING_CONSUMER", "profilesvc.consumer.for.billing.account")
 	rk := getEnv("RABBIT_PROFILESVC_BILLING_RK", "billing.account.created")
+	profileCreatedRk := getEnv("RABBIT_PROFILE_CREATED_RK", "profile.created")
 
 	u := url.URL{Scheme: "amqp",
 		User: url.UserPassword(user, password),
@@ -66,6 +68,7 @@ func GetRabbitConfig() RabbitConfig {
 
 	return RabbitConfig{DSN: u.String(),
 		ProfileProduceExchange:              profileExchange,
+		ProfileCreatedRoutingKey:            profileCreatedRk,
 		BillingConsumeExchange:              billingExchange,
 		ProfileSvcConsumerForBillingAccount: consumer,
 		BillingExchangeToConsumerRoutingKey: rk}

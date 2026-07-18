@@ -12,6 +12,7 @@ type ProfileService interface {
 	List(ctx context.Context, query models.QueryDTO) ([]models.GetProfileDTO, error)
 	Create(ctx context.Context, ownerID int64, dto models.ProfileDTO) (models.GetProfileDTO, error)
 	Update(ctx context.Context, ownerID int64, profileID int64, dto models.ProfileDTO) (models.GetProfileDTO, error)
+	UpdateStatus(ctx context.Context, ownerID int64, status string) (bool, error)
 	GetByOwner(ctx context.Context, ownerID int64) (models.GetProfileDTO, error)
 	UpsertByOwner(ctx context.Context, ownerID int64, dto models.ProfileDTO) (models.GetProfileDTO, error)
 }

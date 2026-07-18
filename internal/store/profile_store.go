@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"profile-svc/internal/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"profile-svc/internal/models"
 )
 
 var ErrProfileNotFound = errors.New("profile not found")
@@ -53,6 +53,23 @@ func (s *ProfileStore) Update(ctx context.Context, profile models.Profile) (mode
 	}
 
 	return profile, nil
+}
+
+func (s *ProfileStore) UpdateStatus(ctx context.Context, ownerId int64, status string) (bool, error) {
+	tag, err := s.db.Exec(ctx,
+		`UPDATE profile
+		 SET status=$1
+		 WHERE userid=$2`,
+		status, ownerId)
+
+	if err != nil {
+		return false, err
+	}
+	if tag.RowsAffected() == 0 {
+		return false, ErrProfileNotFound
+	}
+
+	return true, nil
 }
 
 func (s *ProfileStore) GetByOwnerID(ctx context.Context, ownerID int64) (models.Profile, error) {

@@ -21,6 +21,7 @@ type Profile struct {
 	City        string
 	Bio         string
 	OwnerID     int64
+	Status      string
 }
 
 type ProfileDTO struct {
@@ -31,6 +32,7 @@ type ProfileDTO struct {
 	Interests   string    `json:"interests"`
 	City        string    `json:"city"`
 	Bio         string    `json:"bio"`
+	Status      string    `json:"status"`
 }
 
 type GetProfileDTO struct {

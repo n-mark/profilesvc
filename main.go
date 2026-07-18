@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"profile-svc/internal/config"
 	"profile-svc/internal/handlers"
+	"profile-svc/internal/messaging"
 	"profile-svc/internal/services"
 	"profile-svc/internal/store"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -26,15 +29,26 @@ func main() {
 	}
 	log.Println("connected to database")
 
+	broker, err := messaging.InitBroker(cfg)
+	if err != nil {
+		log.Fatalf("failed to init broker: %v", err)
+	}
+
 	profileStore := store.NewProfileStore(db)
+	profileService := services.NewProfileService(profileStore, broker)
+	server := handlers.NewServer(profileService, broker)
 
-	profileService := services.NewProfileService(profileStore)
+	go runHttpServer(cfg.ServerAddr, server.Router())
 
+	slog.Info("starting broker loop")
+	broker.Run()
+	slog.Info("broker loop exited")
+}
 
-	server := handlers.NewServer(profileService)
-
-	log.Printf("listening on %s", cfg.ServerAddr)
-	if err := http.ListenAndServe(cfg.ServerAddr, server.Router()); err != nil {
+func runHttpServer(s string, handler http.Handler) {
+	if err := http.ListenAndServe(s, handler); err != nil {
 		log.Fatalf("server failed: %v", err)
+	} else {
+		log.Println("http server started")
 	}
 }
