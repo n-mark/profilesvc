@@ -21,8 +21,13 @@ func NewServer(profileService ProfileService, broker messaging.Broker) *Server {
 func (s *Server) Router() http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/profile", s.profileHandler.HandleProfile)
-	mux.HandleFunc("/profile/list", s.profileHandler.List)
+	// Public API (versioned)
+	mux.HandleFunc("/api/v1/profile", s.profileHandler.HandleProfile)
+	mux.HandleFunc("/api/v1/profile/list", s.profileHandler.List)
+
+	// Internal API (versioned) — for BFF / other services inside the cluster.
+	mux.HandleFunc("GET /internal/v1/users/{id}", s.profileHandler.GetUserInternal)
+	mux.HandleFunc("POST /internal/v1/users/batch", s.profileHandler.GetUsersBatchInternal)
 
 	return mux
 }

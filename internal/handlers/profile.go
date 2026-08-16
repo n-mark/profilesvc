@@ -126,6 +126,65 @@ func (h *ProfileHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, profile)
 }
 
+// GetUserInternal handles GET /internal/v1/users/{id}.
+// Returns a lightweight public profile card for other services.
+func (h *ProfileHandler) GetUserInternal(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		http.Error(w, "invalid user id", http.StatusBadRequest)
+		return
+	}
+
+	profile, err := h.service.GetByOwner(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, store.ErrProfileNotFound) {
+			http.Error(w, "profile not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, mapProfileInternal(profile))
+}
+
+// GetUsersBatchInternal handles POST /internal/v1/users/batch.
+// Request body: {"ids":[1,2,3]}. Response: map[id]profile.
+func (h *ProfileHandler) GetUsersBatchInternal(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		IDs []int64 `json:"ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	result := make(map[string]models.GetProfileDTO)
+	for _, id := range req.IDs {
+		if id <= 0 {
+			continue
+		}
+		profile, err := h.service.GetByOwner(r.Context(), id)
+		if err != nil {
+			continue
+		}
+		result[strconv.FormatInt(id, 10)] = profile
+	}
+
+	writeJSON(w, http.StatusOK, result)
+}
+
+func mapProfileInternal(dto models.GetProfileDTO) map[string]any {
+	return map[string]any{
+		"user_id":    dto.ProfileID,
+		"name":       dto.Name,
+		"surname":    dto.Surname,
+		"city":       dto.City,
+		"profile_id": dto.ProfileID,
+	}
+}
+
 func (h *ProfileHandler) List(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
