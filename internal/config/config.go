@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -25,6 +26,18 @@ type RabbitConfig struct {
 	ProfileCreatedRoutingKey            string
 }
 
+// KafkaConfig mirrors RabbitConfig: exchanges become topics, routing keys
+// become `event_type` values inside the payload, and the consumer queue
+// becomes a consumer group.
+type KafkaConfig struct {
+	Brokers                        []string
+	ProfileTopic                   string
+	BillingTopic                   string
+	BillingGroup                   string
+	ProfileCreatedEventType        string
+	BillingAccountCreatedEventType string
+}
+
 func Load() Config {
 	return Config{
 		DBHost:     getEnv("DB_HOST", "localhost"),
@@ -33,7 +46,7 @@ func Load() Config {
 		DBUser:     getEnv("DB_USER", "social_user"),
 		DBPassword: getEnv("DB_PASSWORD", "social_pass"),
 		ServerAddr: getEnv("SERVER_ADDR", ":8080"),
-		BrokerType: getEnv("BROKER_TYPE", "RABBITMQ"),
+		BrokerType: getEnv("BROKER_TYPE", "KAFKA"),
 	}
 }
 
@@ -72,4 +85,15 @@ func GetRabbitConfig() RabbitConfig {
 		BillingConsumeExchange:              billingExchange,
 		ProfileSvcConsumerForBillingAccount: consumer,
 		BillingExchangeToConsumerRoutingKey: rk}
+}
+
+func GetKafkaConfig() KafkaConfig {
+	return KafkaConfig{
+		Brokers:                        strings.Split(getEnv("KAFKA_BROKERS", "kafka-1:9092,kafka-2:9092,kafka-3:9092"), ","),
+		ProfileTopic:                   getEnv("KAFKA_PROFILE_TOPIC", "profile"),
+		BillingTopic:                   getEnv("KAFKA_BILLING_TOPIC", "billing"),
+		BillingGroup:                   getEnv("KAFKA_BILLING_GROUP", "profilesvc.billing"),
+		ProfileCreatedEventType:        getEnv("KAFKA_PROFILE_CREATED_EVENT_TYPE", "profile.created"),
+		BillingAccountCreatedEventType: getEnv("KAFKA_BILLING_ACCOUNT_CREATED_EVENT_TYPE", "billing.account.created"),
+	}
 }

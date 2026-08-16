@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"profile-svc/internal/models"
-	"profile-svc/internal/store"
+	"profile-service/internal/models"
+	"profile-service/internal/store"
 )
 
 type ProfileHandler struct {

@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 
-	"profile-svc/internal/models"
+	"profile-service/internal/models"
 
 	"github.com/google/uuid"
 )

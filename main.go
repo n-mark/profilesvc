@@ -6,11 +6,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"profile-svc/internal/config"
-	"profile-svc/internal/handlers"
-	"profile-svc/internal/messaging"
-	"profile-svc/internal/services"
-	"profile-svc/internal/store"
+	"profile-service/internal/config"
+	"profile-service/internal/handlers"
+	"profile-service/internal/messaging"
+	"profile-service/internal/services"
+	"profile-service/internal/store"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

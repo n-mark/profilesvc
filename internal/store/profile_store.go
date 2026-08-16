@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"profile-svc/internal/models"
+	"profile-service/internal/models"
 )
 
 var ErrProfileNotFound = errors.New("profile not found")

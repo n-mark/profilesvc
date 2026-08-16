@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"profile-svc/internal/models"
+	"profile-service/internal/models"
 )
 
 type ProfileService interface {

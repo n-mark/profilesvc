@@ -35,6 +35,18 @@ services:
       DB_USER: social_user
       DB_PASSWORD: social_pass
       SERVER_ADDR: :8080
+      # RABBITMQ | KAFKA — переключение реализации брокера
+      BROKER_TYPE: ${BROKER_TYPE:-KAFKA}
+
+      # --- Kafka (общий кластер в shared-network, поднимается из advert-cmd-svc) ---
+      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka-1:9092,kafka-2:9092,kafka-3:9092}
+      KAFKA_PROFILE_TOPIC: "profile"
+      KAFKA_BILLING_TOPIC: "billing"
+      KAFKA_BILLING_GROUP: "profilesvc.billing"
+      KAFKA_PROFILE_CREATED_EVENT_TYPE: "profile.created"
+      KAFKA_BILLING_ACCOUNT_CREATED_EVENT_TYPE: "billing.account.created"
+
+      # --- RabbitMQ (legacy, используется при BROKER_TYPE=RABBITMQ) ---
       RABBIT_HOST: rabbitmq
       RABBIT_PORT: ${RABBIT_PORT:-5672}
       RABBIT_USERNAME: ${RABBIT_USERNAME:-billing}

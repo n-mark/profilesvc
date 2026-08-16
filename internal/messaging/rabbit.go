@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"profile-svc/internal/config"
-	"profile-svc/internal/models"
+	"profile-service/internal/config"
+	"profile-service/internal/models"
 	"sync"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -21,8 +21,9 @@ type RabbitImpl struct {
 	cfg           config.RabbitConfig
 }
 
-func (r *RabbitImpl) GetBillingResponseDataSourceName() string {
-	return r.cfg.ProfileSvcConsumerForBillingAccount
+func (r *RabbitImpl) GetBillingResponseSource() Source {
+	// RabbitMQ filters server-side via the queue binding, so no EventTypes here.
+	return Source{Name: r.cfg.ProfileSvcConsumerForBillingAccount}
 }
 
 func NewRabbitImpl(cfg config.RabbitConfig) (*RabbitImpl, error) {
@@ -93,8 +94,8 @@ func (r *RabbitImpl) routingKeyFor(queue string) []string {
 	return []string{}
 }
 
-func (r *RabbitImpl) RegisterConsumer(queueName string, h HandlerFunc) {
-	r.consumers[queueName] = h
+func (r *RabbitImpl) RegisterConsumer(s Source, h HandlerFunc) {
+	r.consumers[s.Name] = h
 }
 
 func (r *RabbitImpl) produceProfileEvent(routingKey, messageId string, body []byte) error {
@@ -115,9 +116,9 @@ func (r *RabbitImpl) produceProfileEvent(routingKey, messageId string, body []by
 func (r *RabbitImpl) ReportProfileCreated(e models.ProfileCreatedEvent) error {
 	body, err := json.Marshal(e)
 	if err != nil {
-		return fmt.Errorf("marshal order.created: %w", err)
+		return fmt.Errorf("marshal profile.created: %w", err)
 	}
-	slog.Info("publishing profile.created", "order_id", e.OrderId, "rk", r.cfg.ProfileCreatedRoutingKey)
+	slog.Info("publishing profile.created", "user_id", e.UserId, "rk", r.cfg.ProfileCreatedRoutingKey)
 	return r.produceProfileEvent(r.cfg.ProfileCreatedRoutingKey, e.EventId.String(), body)
 }
 

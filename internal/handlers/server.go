@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"profile-svc/internal/messaging"
+	"profile-service/internal/messaging"
 )
 
 type Server struct {
@@ -11,7 +11,7 @@ type Server struct {
 
 func NewServer(profileService ProfileService, broker messaging.Broker) *Server {
 	profileHandler := NewProfileHandler(profileService);
-	broker.RegisterConsumer(broker.GetBillingResponseDataSourceName(), profileHandler.HandleBillingSvcResponse)
+	broker.RegisterConsumer(broker.GetBillingResponseSource(), profileHandler.HandleBillingSvcResponse)
 
 	return &Server{
 		profileHandler: NewProfileHandler(profileService),
