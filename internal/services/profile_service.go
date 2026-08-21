@@ -97,6 +97,7 @@ func (s *ProfileService) Create(ctx context.Context, ownerID int64, dto models.P
 	report := models.ProfileCreatedEvent{
 		EventId:   uuid.New(),
 		EventType: "PROFILE_CREATED",
+		Version:   "1.0",
 		UserId:    ownerID,
 	}
 

@@ -3,6 +3,9 @@ package handlers
 import (
 	"net/http"
 	"profile-service/internal/messaging"
+	"profile-service/internal/prometheus"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Server struct {
@@ -21,6 +24,9 @@ func NewServer(profileService ProfileService, broker messaging.Broker) *Server {
 func (s *Server) Router() http.Handler {
 	mux := http.NewServeMux()
 
+	// Prometheus metrics endpoint
+	mux.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
+
 	// Public API (versioned)
 	mux.HandleFunc("/api/v1/profile", s.profileHandler.HandleProfile)
 	mux.HandleFunc("/api/v1/profile/list", s.profileHandler.List)
@@ -29,5 +35,5 @@ func (s *Server) Router() http.Handler {
 	mux.HandleFunc("GET /internal/v1/users/{id}", s.profileHandler.GetUserInternal)
 	mux.HandleFunc("POST /internal/v1/users/batch", s.profileHandler.GetUsersBatchInternal)
 
-	return mux
+	return prometheus.MetricsMiddleware(mux)
 }

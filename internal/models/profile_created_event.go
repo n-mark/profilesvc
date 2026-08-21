@@ -7,5 +7,6 @@ import "github.com/google/uuid"
 type ProfileCreatedEvent struct {
 	EventId   uuid.UUID `json:"event_id"`
 	EventType string    `json:"event_type"`
+	Version   string    `json:"version"`
 	UserId    int64     `json:"user_id"`
 }
