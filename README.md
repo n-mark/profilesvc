@@ -1,6 +1,6 @@
 # Profile Service (Сервис профилей)
 
-Микросервис профилей пользователей для маркетплейса объявлений (финальный проект). Написан на Go.
+Микросервис профилей пользователей для интернет-сервиса по размещению объявлений (финальный проект). Написан на Go.
 
 - **GitHub:** https://github.com/n-mark/profilesvc
 - **DockerHub:** [`mblkuta/profile-service`](https://hub.docker.com/r/mblkuta/profile-service)
